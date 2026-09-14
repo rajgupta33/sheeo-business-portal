@@ -83,7 +83,7 @@
                 <div><strong>${U.escapeHtml(profile.full_name || 'SheEO Member')}</strong><small>${U.escapeHtml(profile.business_name || this.session.user.email)}</small></div>
               </div>
               <button class="portal-button secondary small" data-action="logout" style="width:100%; margin-top:14px; color:#fff; border-color:rgba(255,255,255,.25)"><i data-lucide="log-out"></i> Sign out</button>
-              <button class="portal-install-link" type="button" data-pwa-install data-action="install" ${window.SheeoPwa?.canInstall ? '' : 'hidden'}><i data-lucide="download"></i> Install member app</button>
+              <button class="portal-install-link" type="button" data-pwa-install><i data-lucide="download"></i> Install member app</button>
             </div>
           </aside>
           <button class="mobile-overlay" aria-label="Close navigation" data-action="close-nav"></button>
@@ -104,21 +104,28 @@
           </main>
         </div>`;
 
+      // Keep the page behind the mobile drawer from scrolling while it is open.
+      const setNav = (open) => {
+        document.body.classList.toggle('portal-nav-open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+
       document.addEventListener('click', (event) => {
         const action = event.target.closest('[data-action]')?.dataset.action;
-        if (action === 'open-nav') document.body.classList.add('portal-nav-open');
-        if (action === 'close-nav') document.body.classList.remove('portal-nav-open');
+        if (action === 'open-nav') setNav(true);
+        if (action === 'close-nav') setNav(false);
         if (action === 'logout') window.SheeoAuth.logout();
       });
 
       document.querySelector('.portal-nav')?.addEventListener('click', (event) => {
-        if (event.target.closest('a')) document.body.classList.remove('portal-nav-open');
+        if (event.target.closest('a')) setNav(false);
       });
       document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') document.body.classList.remove('portal-nav-open');
+        if (event.key === 'Escape') setNav(false);
       });
 
       U.renderIcons();
+      window.SheeoPwa?.syncInstallButtons?.();
       const renderer = window.SheeoPages?.[this.page];
       if (!renderer) return this.showError(new Error(`No renderer registered for ${this.page}.`));
       try { await renderer({ session: this.session, root: document.getElementById('portal-content') }); }
